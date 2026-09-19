@@ -6,20 +6,19 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildVoiceStates // Ses kanallarını takip etmek için gerekli
+        GatewayIntentBits.GuildVoiceStates
     ]
 });
 
-// --- VERİTABANI ---
+// Veritabanı ve Ses Takibi
 const levels = new Map();
-// Ses kanalındaki kullanıcıları takip etmek için sayaç (Kullanıcı ID -> Zamanlayıcı)
 const voiceTimeouts = new Map();
 
 client.once('ready', () => {
-    console.log(`ProsiBot ses ve mesaj rank sistemi aktif! Giriş yapılan bot: ${client.user.tag}`);
+    console.log(`ProsiBot görsel rank sistemi aktif! Giriş yapılan bot: ${client.user.tag}`);
 });
 
-// 1. MESAJ YAZARAK XP KAZANMA
+// 1. MESAJ YAZARAK XP KAZANMA VE RANK KARTI
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.guild) return;
 
@@ -32,7 +31,7 @@ client.on('messageCreate', async message => {
     }
 
     const userStats = levels.get(key);
-    userStats.xp += 10; // Mesaj başına 10 XP
+    userStats.xp += 10; 
     const neededXp = userStats.level * 100;
 
     if (userStats.xp >= neededXp) {
@@ -51,11 +50,11 @@ client.on('messageCreate', async message => {
         const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
         const ctx = canvas.getContext('2d');
 
-        // Arka Plan
+        // Arka Plan Rengi
         ctx.fillStyle = '#23272A';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-        // Profil Resmi
+        // Profil Resmi Çerçevesi ve Resim
         const avatarRadius = 80;
         ctx.beginPath();
         ctx.arc(140, canvasHeight / 2, avatarRadius, 0, Math.PI * 2, true);
@@ -84,7 +83,7 @@ client.on('messageCreate', async message => {
         ctx.textAlign = 'right';
         ctx.fillText(`${stats.xp} / ${neededXpNext} XP`, canvasWidth - 40, 190);
 
-        // XP Barı
+        // XP Barı (Çubuğu)
         const barWidth = 570;
         const barHeight = 40;
         const barX = 300;
@@ -139,11 +138,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     const guildId = newState.guild.id;
     const key = `${guildId}-${userId}`;
 
-    // Kullanıcı bir ses kanalına katıldıysa ve mutesizse
     if (newState.channelId && !oldState.channelId) {
-        // Her 60 saniyede (1 dakikada) bir XP ver
         const interval = setInterval(() => {
-            // Hala seste mi kontrol et
             if (!member.voice.channelId) {
                 clearInterval(interval);
                 voiceTimeouts.delete(key);
@@ -155,21 +151,17 @@ client.on('voiceStateUpdate', (oldState, newState) => {
             }
 
             const userStats = levels.get(key);
-            userStats.xp += 15; // Ses kanalında geçen her dakika için 15 XP
+            userStats.xp += 15; 
             const neededXp = userStats.level * 100;
 
             if (userStats.xp >= neededXp) {
                 userStats.level += 1;
                 userStats.xp = 0;
-                
-                // Kullanıcının bulunduğu genel metin kanalına veya varsayılan kanala bilgi atılabilir
-                // Burada basitçe konsola yazdırıyoruz ya da sunucudaki ilk uygun kanala mesaj atılabilir.
             }
-        }, 60000); // 60000 milisaniye = 1 dakika
+        }, 60000);
 
         voiceTimeouts.set(key, interval);
     } 
-    // Kullanıcı sesten çıktıysa veya tamamen ayrıldıysa sayacı durdur
     else if (!newState.channelId && oldState.channelId) {
         if (voiceTimeouts.has(key)) {
             clearInterval(voiceTimeouts.get(key));
@@ -178,5 +170,4 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     }
 });
 
-// Token gizli kasadan çekiliyor
 client.login(process.env.DISCORD_TOKEN);
