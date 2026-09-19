@@ -37,7 +37,7 @@ client.on('messageCreate', async message => {
         userStats.level += 1;
         userStats.xp = 0; // XP'yi sıfırla veya bir sonraki levele aktar
 
-        message.channel.chats || message.channel.send(`Tebrikler ${message.author}, seviye atladın! Yeni seviyen: **${userStats.level}** 🚀`);
+        message.channel.send(`Tebrikler ${message.author}, seviye atladın! Yeni seviyen: **${userStats.level}** 🚀`);
     }
 
     // Basit bir komut: !rank veya !seviye yazınca kart gösterir
@@ -55,4 +55,5 @@ client.on('messageCreate', async message => {
     }
 });
 
-client.login('MTU1MDQ4MTQzMzc5MTgyMzk0Mw.GLSabp.fWJeAyp_6VYfVbDzrhBolesCUQcmO3VxVEkxPk');
+// Tokeni açıkça yazmıyoruz, Railway'deki gizli kasadan alıyor
+client.login(process.env.DISCORD_TOKEN);
